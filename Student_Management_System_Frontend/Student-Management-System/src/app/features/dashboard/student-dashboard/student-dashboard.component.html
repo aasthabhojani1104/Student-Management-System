@@ -1,0 +1,99 @@
+<div class="dashboard-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Welcome, {{ currentUser?.fullName ? currentUser!.fullName.split(' ')[0] : 'there' }}!</h1>
+      <p class="page-subtitle">Track your projects and task progress here</p>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <app-kpi-card title="My Projects"   [value]="kpis.projects"       icon="folder_open"  iconBg="#6366f1"></app-kpi-card>
+    <app-kpi-card title="Total Tasks"   [value]="kpis.tasks"          icon="task_alt"     iconBg="#0ea5e9"></app-kpi-card>
+    <app-kpi-card title="Completed"     [value]="kpis.completed"      icon="check_circle" iconBg="#22c55e"></app-kpi-card>
+    <app-kpi-card title="Score %"       [value]="kpis.score + '%'"    icon="stars"        iconBg="#f59e0b"></app-kpi-card>
+  </div>
+
+  <div class="content-grid">
+    <!-- My Projects -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">My Projects</span>
+        <a routerLink="/projects" class="btn btn-ghost btn-sm">View All</a>
+      </div>
+      <div class="card-body">
+        @if (loading) {
+          <app-skeleton type="card" [rows]="4"></app-skeleton>
+        } @else if (projects.length === 0) {
+          <div class="empty-state">
+            <mat-icon>folder_off</mat-icon>
+            <p>No projects assigned</p>
+          </div>
+        } @else {
+          <div class="project-list">
+            @for (p of projects; track p.projectId) {
+              <div class="project-progress-item">
+                <div class="project-item-header">
+                  <span class="project-item-title">{{ p.projectTitle }}</span>
+                  <app-badge [label]="p.statusName || '—'" [cssClass]="mapCss(p.statusCssClass)"></app-badge>
+                </div>
+                <div class="project-item-meta">
+                  Supervised by {{ p.facultyName }} · Due {{ formatDate(p.endDate) }}
+                </div>
+                <div class="project-item-progress">
+                  <div class="progress-bar-wrap" style="height:8px">
+                    <div class="progress-bar-fill"
+                         [style.width.%]="p.progressPercentage"
+                         [class.success]="p.progressPercentage >= 100"
+                         [class.warning]="p.progressPercentage >= 50 && p.progressPercentage < 100"
+                         [class.danger]="p.progressPercentage < 50 && p.progressPercentage > 0">
+                    </div>
+                  </div>
+                  <span class="progress-label">{{ p.progressPercentage }}%</span>
+                </div>
+                <div class="project-item-tasks">
+                  {{ p.completedTasks }} / {{ p.totalTasks }} tasks completed
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Upcoming Task Deadlines -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">Upcoming Deadlines</span>
+      </div>
+      <div class="card-body">
+        @if (loading) {
+          <app-skeleton type="card" [rows]="5"></app-skeleton>
+        } @else if (upcoming.length === 0) {
+          <div class="empty-state">
+            <mat-icon>event_available</mat-icon>
+            <p>No upcoming deadlines</p>
+          </div>
+        } @else {
+          <div class="deadline-list">
+            @for (t of upcoming; track t.taskId) {
+              <div class="deadline-item" [class.overdue]="isOverdue(t.dueDate)">
+                <div class="deadline-icon" [class.overdue-icon]="isOverdue(t.dueDate)">
+                  <mat-icon>event</mat-icon>
+                </div>
+                <div class="deadline-info">
+                  <span class="deadline-title">{{ t.taskTitle }}</span>
+                  <span class="deadline-meta">
+                    <app-badge [label]="t.priorityName || ''" [cssClass]="mapCss(t.priorityCssClass)"></app-badge>
+                    · Due {{ formatDate(t.dueDate) }}
+                  </span>
+                </div>
+                <app-badge [label]="t.statusName || ''" [cssClass]="mapCss(t.statusCssClass)"></app-badge>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+.shell-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-base);
+}
+
+.shell-main {
+  flex: 1;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+}
+
+.shell-content {
+  padding-top: var(--topnav-height);
+  min-height: calc(100vh - var(--topnav-height));
+}
+
+.content-inner {
+  padding: 20px 24px;
+  max-width: 1600px;
+}

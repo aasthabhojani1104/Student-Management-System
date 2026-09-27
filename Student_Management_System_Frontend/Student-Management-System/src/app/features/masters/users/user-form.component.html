@@ -1,0 +1,112 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate class="drawer-form">
+
+  <!-- Profile Picture -->
+  <div class="form-group" style="align-items:center">
+    <div class="avatar-upload-area" (click)="fileInput.click()">
+      @if (previewUrl) {
+        <img [src]="previewUrl" alt="preview" class="avatar-preview">
+      } @else {
+        <div class="avatar xl" [style.background]="'#6366f1'">
+          {{ getInitials() }}
+        </div>
+      }
+      <div class="avatar-overlay"><mat-icon>photo_camera</mat-icon></div>
+    </div>
+    <input #fileInput type="file" accept="image/jpeg,image/png" style="display:none" (change)="onFile($event)">
+    <span class="form-hint">JPEG or PNG, max 2 MB</span>
+  </div>
+
+  <!-- Full Name -->
+  <div class="form-group">
+    <label class="form-label required">Full Name</label>
+    <input class="form-control" formControlName="fullName" placeholder="e.g. Arjun Patel" maxlength="150"
+           [class.error]="form.get('fullName')!.invalid && form.get('fullName')!.touched">
+    @if (form.get('fullName')!.touched && form.get('fullName')!.hasError('required')) {
+      <span class="form-error">Full name is required</span>
+    }
+    @if (form.get('fullName')!.touched && form.get('fullName')!.hasError('maxlength')) {
+      <span class="form-error">Max 150 characters</span>
+    }
+  </div>
+
+  <!-- Email -->
+  <div class="form-group">
+    <label class="form-label required">Email Address</label>
+    <input class="form-control" type="email" formControlName="email" placeholder="user@spms.com"
+           [class.error]="form.get('email')!.invalid && form.get('email')!.touched"
+           [attr.readonly]="user ? true : null">
+    @if (form.get('email')!.touched && form.get('email')!.hasError('required')) {
+      <span class="form-error">Email is required</span>
+    }
+    @if (form.get('email')!.touched && form.get('email')!.hasError('email')) {
+      <span class="form-error">Enter a valid email address</span>
+    }
+  </div>
+
+  <!-- Password -->
+  <div class="form-group">
+    <label class="form-label" [class.required]="!user">
+      Password {{ user ? '(leave blank to keep)' : '' }}
+    </label>
+    <div class="input-with-icon">
+      <input class="form-control has-icon-right"
+             [type]="showPassword ? 'text' : 'password'"
+             formControlName="password"
+             autocomplete="new-password"
+             placeholder="{{ user ? 'Leave blank to keep current' : 'Min 8 characters' }}"
+             [class.error]="form.get('password')!.invalid && form.get('password')!.touched">
+      <button type="button" class="input-icon-right icon-btn" (click)="showPassword = !showPassword">
+        <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+    </div>
+    @if (form.get('password')!.touched && form.get('password')!.hasError('required')) {
+      <span class="form-error">Password is required</span>
+    }
+    @if (form.get('password')!.touched && form.get('password')!.hasError('minlength')) {
+      <span class="form-error">Minimum 6 characters</span>
+    }
+  </div>
+
+  <!-- Mobile -->
+  <div class="form-group">
+    <label class="form-label">Mobile Number</label>
+    <input class="form-control" formControlName="mobileNumber" placeholder="9876543210" maxlength="10"
+           [class.error]="form.get('mobileNumber')!.invalid && form.get('mobileNumber')!.touched">
+    @if (form.get('mobileNumber')!.touched && form.get('mobileNumber')!.hasError('pattern')) {
+      <span class="form-error">Enter a valid 10-digit mobile number starting with 6–9</span>
+    }
+  </div>
+
+  <!-- Role -->
+  <div class="form-group">
+    <label class="form-label">Role</label>
+    <select class="form-control" formControlName="roleId">
+      <option [ngValue]="null">— Select Role —</option>
+      @for (role of roles; track role.roleId) {
+        <option [ngValue]="role.roleId">{{ role.roleName }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Status -->
+  <div class="form-group">
+    <label class="form-label">Status</label>
+    <div class="toggle-row">
+      <span class="form-hint">{{ form.get('isActive')!.value ? 'Active' : 'Inactive' }}</span>
+      <label class="switch">
+        <input type="checkbox" formControlName="isActive">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="drawer-footer">
+    <button type="button" class="btn btn-secondary" (click)="cancelled.emit()">Cancel</button>
+    <button type="submit" class="btn btn-primary" [disabled]="saving">
+      @if (saving) { <span class="spinner-sm"></span> }
+      {{ user ? 'Update User' : 'Create User' }}
+    </button>
+  </div>
+
+</form>

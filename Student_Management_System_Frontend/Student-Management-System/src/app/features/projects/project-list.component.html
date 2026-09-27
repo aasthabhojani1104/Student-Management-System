@@ -1,0 +1,202 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Projects</h1>
+      <p class="page-subtitle">Academic project lifecycle management</p>
+    </div>
+    @if (canEdit) {
+      <button class="btn btn-primary" (click)="openAdd()">
+        <mat-icon>add</mat-icon> Add Project
+      </button>
+    }
+  </div>
+
+  <app-table
+    [columns]="columns"
+    [data]="displayProjects"
+    [loading]="loading"
+    [actions]="actions"
+    emptyMessage="No projects found."
+    (actionClicked)="onAction($event)">
+  </app-table>
+</div>
+
+<!-- Add/Edit Drawer -->
+<app-drawer [open]="drawerOpen" [title]="selectedProject ? 'Edit Project' : 'Add Project'" [width]="'520px'" (closed)="drawerOpen = false">
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="drawer-form">
+
+    <div class="form-group">
+      <label class="form-label required">Project Title</label>
+      <input class="form-control" formControlName="projectTitle" placeholder="Enter project title" maxlength="200"
+             [class.error]="form.get('projectTitle')!.invalid && form.get('projectTitle')!.touched">
+      @if (form.get('projectTitle')!.touched && form.get('projectTitle')!.hasError('required')) {
+        <span class="form-error">Project title is required</span>
+      }
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-control" formControlName="description" rows="3" placeholder="Project description" maxlength="1000"></textarea>
+      <span class="form-hint">{{ form.get('description')!.value?.length || 0 }}/1000</span>
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-group">
+        <label class="form-label required">Start Date</label>
+        <input type="date" class="form-control" formControlName="startDate"
+               [class.error]="form.get('startDate')!.invalid && form.get('startDate')!.touched">
+        @if (form.get('startDate')!.touched && form.get('startDate')!.hasError('required')) {
+          <span class="form-error">Required</span>
+        }
+      </div>
+      <div class="form-group">
+        <label class="form-label required">End Date</label>
+        <input type="date" class="form-control" formControlName="endDate"
+               [class.error]="form.get('endDate')!.invalid && form.get('endDate')!.touched">
+        @if (form.get('endDate')!.touched && form.get('endDate')!.hasError('required')) {
+          <span class="form-error">Required</span>
+        }
+        @if (form.get('endDate')!.touched && form.get('endDate')!.hasError('afterStart')) {
+          <span class="form-error">End date must be after start date</span>
+        }
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label required">Status</label>
+      <select class="form-control" formControlName="projectStatus"
+              [class.error]="form.get('projectStatus')!.invalid && form.get('projectStatus')!.touched">
+        <option value="" disabled>— Select Status —</option>
+        @for (s of statuses; track s.statusId) {
+          <option [value]="s.statusId">{{ s.statusName }}</option>
+        }
+      </select>
+      @if (form.get('projectStatus')!.touched && form.get('projectStatus')!.hasError('required')) {
+        <span class="form-error">Status is required</span>
+      }
+    </div>
+
+    <div class="form-group">
+      <label class="form-label required">Supervising Faculty</label>
+      <select class="form-control" formControlName="facultyId"
+              [class.error]="form.get('facultyId')!.invalid && form.get('facultyId')!.touched">
+        <option value="" disabled>— Select Faculty —</option>
+        @for (f of faculties; track f.userId) {
+          <option [value]="f.userId">{{ f.fullName }}</option>
+        }
+      </select>
+      @if (form.get('facultyId')!.touched && form.get('facultyId')!.hasError('required')) {
+        <span class="form-error">Faculty is required</span>
+      }
+    </div>
+
+    <div class="form-group">
+      <label class="form-label required">Assigned Student</label>
+      <select class="form-control" formControlName="studentId"
+              [class.error]="form.get('studentId')!.invalid && form.get('studentId')!.touched">
+        <option value="" disabled>— Select Student —</option>
+        @for (s of students; track s.userId) {
+          <option [value]="s.userId">{{ s.fullName }}</option>
+        }
+      </select>
+      @if (form.get('studentId')!.touched && form.get('studentId')!.hasError('required')) {
+        <span class="form-error">Student is required</span>
+      }
+    </div>
+
+    <div class="drawer-footer">
+      <button type="button" class="btn btn-secondary" (click)="drawerOpen = false">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        @if (saving) { <span class="spinner-sm"></span> }
+        {{ selectedProject ? 'Update Project' : 'Create Project' }}
+      </button>
+    </div>
+  </form>
+</app-drawer>
+
+<!-- Detail Drawer -->
+<app-drawer [open]="detailOpen" [title]="detailProject?.projectTitle || 'Project Details'" [width]="'600px'" (closed)="detailOpen = false">
+  @if (detailProject) {
+    <div class="detail-tabs">
+      <button class="tab-btn" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">Overview</button>
+      <button class="tab-btn" [class.active]="activeTab === 'members'"  (click)="activeTab = 'members'">Members</button>
+      <button class="tab-btn" [class.active]="activeTab === 'progress'" (click)="activeTab = 'progress'">Progress</button>
+    </div>
+
+    @if (activeTab === 'overview') {
+      <div class="detail-section">
+        <div class="detail-row">
+          <span class="detail-label">Status</span>
+          <span class="badge" [class]="detailProject.statusCssClass">{{ detailProject.statusName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Start Date</span>
+          <span>{{ detailProject.startDate | date:'mediumDate' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">End Date</span>
+          <span>{{ detailProject.endDate | date:'mediumDate' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Tasks</span>
+          <span>{{ detailProject.completedTasks }} / {{ detailProject.totalTasks }} completed</span>
+        </div>
+        @if (detailProject.description) {
+          <div class="form-group" style="margin-top:16px">
+            <label class="form-label">Description</label>
+            <p class="detail-text">{{ detailProject.description }}</p>
+          </div>
+        }
+      </div>
+    }
+
+    @if (activeTab === 'members') {
+      <div class="detail-section members-grid">
+        <div class="member-card">
+          <div class="avatar lg" [style.background]="'#6366f1'">
+            {{ getInitials(detailProject.facultyName) }}
+          </div>
+          <div>
+            <p class="member-name">{{ detailProject.facultyName }}</p>
+            <span class="badge badge-accent">Faculty</span>
+          </div>
+        </div>
+        <div class="member-card">
+          <div class="avatar lg" [style.background]="'#22c55e'">
+            {{ getInitials(detailProject.studentName) }}
+          </div>
+          <div>
+            <p class="member-name">{{ detailProject.studentName }}</p>
+            <span class="badge badge-success">Student</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (activeTab === 'progress') {
+      <div class="detail-section">
+        <div class="progress-detail">
+          <div class="progress-circle-wrap">
+            <svg viewBox="0 0 120 120" class="progress-circle">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--bg-surface-2)" stroke-width="10"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--primary)" stroke-width="10"
+                      stroke-dasharray="314.16"
+                      [attr.stroke-dashoffset]="314.16 * (1 - (detailProject.progressPercentage || 0) / 100)"
+                      stroke-linecap="round"
+                      transform="rotate(-90 60 60)"/>
+            </svg>
+            <span class="progress-pct">{{ detailProject.progressPercentage || 0 }}%</span>
+          </div>
+          <div>
+            <p class="section-title">Overall Completion</p>
+            <p class="page-subtitle">{{ detailProject.completedTasks }} of {{ detailProject.totalTasks }} tasks done</p>
+          </div>
+        </div>
+        <div class="progress-bar-wrap" style="margin-top:24px">
+          <div class="progress-bar-fill" [class]="getProgressClass(detailProject.progressPercentage || 0)"
+               [style.width.%]="detailProject.progressPercentage || 0"></div>
+        </div>
+      </div>
+    }
+  }
+</app-drawer>

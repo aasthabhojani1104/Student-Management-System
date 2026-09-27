@@ -1,0 +1,17 @@
+<div class="confirm-dialog">
+  <div class="confirm-header">
+    <div class="confirm-icon" [class.danger]="data.danger">
+      <mat-icon>{{ data.danger ? 'delete_forever' : 'help_outline' }}</mat-icon>
+    </div>
+    <h2 class="confirm-title">{{ data.title }}</h2>
+  </div>
+  <p class="confirm-message">{{ data.message }}</p>
+  <div class="confirm-actions">
+    <button class="btn btn-secondary" (click)="cancel()">
+      {{ data.cancelLabel || 'Cancel' }}
+    </button>
+    <button class="btn" [class.btn-danger]="data.danger" [class.btn-primary]="!data.danger" (click)="confirm()">
+      {{ data.confirmLabel || 'Confirm' }}
+    </button>
+  </div>
+</div>

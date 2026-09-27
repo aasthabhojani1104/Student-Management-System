@@ -1,0 +1,73 @@
+<div class="dashboard-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Welcome, {{ currentUser?.fullName ? currentUser!.fullName.split(' ')[0] : 'there' }}!</h1>
+      <p class="page-subtitle">Here's an overview of your supervised projects</p>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <app-kpi-card title="My Projects"    [value]="kpis.projects"    icon="folder_open" iconBg="#6366f1"></app-kpi-card>
+    <app-kpi-card title="Active Tasks"   [value]="kpis.activeTasks" icon="pending"     iconBg="#0ea5e9"></app-kpi-card>
+    <app-kpi-card title="Completed"      [value]="kpis.completed"   icon="check_circle" iconBg="#22c55e"></app-kpi-card>
+    <app-kpi-card title="Students"       [value]="kpis.students"    icon="school"       iconBg="#f59e0b"></app-kpi-card>
+  </div>
+
+  <div class="content-grid">
+    <!-- Project Progress Chart -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">Project Progress</span>
+        <a routerLink="/projects" class="btn btn-ghost btn-sm">View All</a>
+      </div>
+      <div class="card-body">
+        @if (loading) {
+          <div class="skeleton" style="height:220px;border-radius:var(--radius-md)"></div>
+        } @else if ((barData.labels?.length ?? 0) > 0) {
+          <div class="chart-container">
+            <canvas baseChart [data]="barData" [options]="barOptions" type="bar"></canvas>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <mat-icon>folder_off</mat-icon>
+            <p>No projects found</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Upcoming Deadlines -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">Upcoming Deadlines</span>
+      </div>
+      <div class="card-body">
+        @if (loading) {
+          <app-skeleton type="card" [rows]="5"></app-skeleton>
+        } @else if (upcoming.length === 0) {
+          <div class="empty-state">
+            <mat-icon>event_available</mat-icon>
+            <p>No upcoming deadlines</p>
+          </div>
+        } @else {
+          <div class="deadline-list">
+            @for (t of upcoming; track t.taskId) {
+              <div class="deadline-item" [class.overdue]="isOverdue(t.dueDate)">
+                <div class="deadline-date">
+                  <div class="deadline-day">{{ formatDate(t.dueDate).split(' ')[1] }}</div>
+                  <div class="deadline-month">{{ formatDate(t.dueDate).split(' ')[0] }}</div>
+                </div>
+                <div class="deadline-info">
+                  <span class="deadline-title">{{ t.taskTitle }}</span>
+                  <span class="deadline-project">{{ t.projectTitle }}</span>
+                </div>
+                <app-badge [label]="t.statusName || ''" [cssClass]="mapCss(t.statusCssClass)"></app-badge>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

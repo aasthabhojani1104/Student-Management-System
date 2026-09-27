@@ -1,0 +1,20 @@
+@if (open) {
+  <div class="drawer-backdrop" (click)="onBackdropClick()"></div>
+
+  <div class="drawer-panel" [style.width]="width">
+    @if (loading) {
+      <div class="drawer-loading-bar">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      </div>
+    }
+    <div class="drawer-header">
+      <h3 class="drawer-title">{{ title }}</h3>
+      <button class="btn btn-icon btn-ghost" (click)="close()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <ng-content></ng-content>
+    </div>
+  </div>
+}

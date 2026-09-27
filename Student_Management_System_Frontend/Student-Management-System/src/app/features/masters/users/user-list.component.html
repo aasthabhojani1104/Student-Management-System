@@ -1,0 +1,32 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Manage Users</h1>
+      <p class="page-subtitle">Create and manage all system user accounts</p>
+    </div>
+    <button class="btn btn-primary" (click)="openAdd()">
+      <mat-icon>person_add</mat-icon>
+      Add User
+    </button>
+  </div>
+
+  <app-table
+    [columns]="columns"
+    [data]="displayUsers"
+    [loading]="loading"
+    [actions]="actions"
+    emptyMessage="No users found."
+    (actionClicked)="onAction($event)">
+  </app-table>
+</div>
+
+<app-drawer
+  [open]="drawerOpen"
+  [title]="drawerTitle"
+  (closed)="drawerOpen = false">
+  <app-user-form
+    [user]="selectedUser"
+    (saved)="onSaved()"
+    (cancelled)="drawerOpen = false">
+  </app-user-form>
+</app-drawer>

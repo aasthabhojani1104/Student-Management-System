@@ -1,0 +1,53 @@
+<header class="topnav">
+  <!-- Left -->
+  <div class="topnav-left">
+    <button class="btn btn-icon btn-ghost" (click)="toggleSidebar.emit()" matTooltip="Toggle Sidebar">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span class="app-title">
+      <span class="app-title-main">SPMS</span>
+      <span class="app-title-sub">Student Project Management</span>
+    </span>
+  </div>
+
+  <!-- Right -->
+  <div class="topnav-right">
+    <!-- Theme Toggle -->
+    <button class="btn btn-icon btn-ghost" (click)="themeService.toggle()" [matTooltip]="isDark ? 'Light Mode' : 'Dark Mode'">
+      <mat-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+
+    <!-- User Menu -->
+    <div class="user-menu" (clickOutside)="closeDropdown()">
+      <button class="user-trigger" (click)="toggleDropdown()">
+        <div class="user-avatar" [style.background-color]="getAvatarColor()">
+          {{ getAvatarText() }}
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ user?.fullName }}</span>
+          <span class="user-role">{{ user?.roleName }}</span>
+        </div>
+        <mat-icon class="dropdown-arrow" [class.open]="dropdownOpen">expand_more</mat-icon>
+      </button>
+
+      @if (dropdownOpen) {
+        <div class="dropdown-menu">
+          <div class="dropdown-header">
+            <div class="dropdown-user-name">{{ user?.fullName }}</div>
+            <div class="dropdown-user-email">{{ user?.email }}</div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" routerLink="/profile" (click)="closeDropdown()">
+            <mat-icon>account_circle</mat-icon>
+            Profile
+          </a>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item danger" (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            Sign Out
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>

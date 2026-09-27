@@ -1,0 +1,175 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">My Profile</h1>
+      <p class="page-subtitle">View and update your account information</p>
+    </div>
+  </div>
+
+  @if (user) {
+    <div class="profile-layout">
+
+      <!-- Left: Avatar card -->
+      <div class="card profile-card">
+        <div class="card-body profile-identity">
+          <div class="avatar-wrap">
+            @if (avatarSrc) {
+              <img [src]="avatarSrc" alt="profile" class="avatar-img">
+            } @else {
+              <div class="avatar avatar-xl profile-avatar">{{ initials }}</div>
+            }
+            @if (editMode) {
+              <label class="avatar-edit-btn" for="avatarInput">
+                <mat-icon>photo_camera</mat-icon>
+              </label>
+              <input id="avatarInput" type="file" accept="image/jpeg,image/png"
+                     style="display:none" (change)="onFile($event)">
+            }
+          </div>
+          <h2 class="profile-name">{{ user.fullName }}</h2>
+          <span class="badge badge-primary">{{ user.roleName }}</span>
+          <p class="profile-email">{{ user.email }}</p>
+          <span class="badge" [class.badge-success]="user.isActive" [class.badge-secondary]="!user.isActive">
+            {{ user.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Right: Info & Forms -->
+      <div class="profile-details">
+
+        <!-- Personal Info Card -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-header-title">Personal Information</span>
+            @if (!editMode) {
+              <button class="btn btn-secondary btn-sm" (click)="editMode = true">
+                <mat-icon>edit</mat-icon> Edit
+              </button>
+            }
+          </div>
+          <div class="card-body">
+            @if (!editMode) {
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Full Name</span>
+                  <span class="info-value">{{ user.fullName }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Email</span>
+                  <span class="info-value">{{ user.email }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Mobile</span>
+                  <span class="info-value">{{ user.mobileNumber || '—' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Role</span>
+                  <span class="info-value">{{ user.roleName }}</span>
+                </div>
+              </div>
+            } @else {
+              <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate>
+                <div class="form-group">
+                  <label class="form-label required">Full Name</label>
+                  <input class="form-control" formControlName="fullName" placeholder="Your full name"
+                         [class.error]="profileForm.get('fullName')!.invalid && profileForm.get('fullName')!.touched">
+                  @if (profileForm.get('fullName')!.touched && profileForm.get('fullName')!.hasError('required')) {
+                    <span class="form-error">Full name is required</span>
+                  }
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Mobile Number</label>
+                  <input class="form-control" formControlName="mobileNumber" placeholder="10-digit mobile"
+                         [class.error]="profileForm.get('mobileNumber')!.invalid && profileForm.get('mobileNumber')!.touched">
+                  @if (profileForm.get('mobileNumber')!.touched && profileForm.get('mobileNumber')!.hasError('pattern')) {
+                    <span class="form-error">Enter a valid 10-digit mobile number</span>
+                  }
+                </div>
+                <div class="form-actions-row">
+                  <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
+                  <button type="submit" class="btn btn-primary" [disabled]="savingProfile">
+                    @if (savingProfile) { <span class="spinner-sm"></span> }
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            }
+          </div>
+        </div>
+
+        <!-- Change Password Card -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-header-title">Security</span>
+            @if (!changingPwd) {
+              <button class="btn btn-secondary btn-sm" (click)="changingPwd = true">
+                <mat-icon>lock</mat-icon> Change Password
+              </button>
+            }
+          </div>
+          <div class="card-body">
+            @if (!changingPwd) {
+              <p class="info-value" style="color:var(--text-muted)">
+                Password last changed: unknown · Use the button to update your password.
+              </p>
+            } @else {
+              <form [formGroup]="pwdForm" (ngSubmit)="savePassword()" novalidate>
+                <div class="form-group">
+                  <label class="form-label required">Current Password</label>
+                  <div class="input-icon-wrap">
+                    <input class="form-control" [type]="showCurrent ? 'text' : 'password'"
+                           formControlName="currentPassword" placeholder="Your current password"
+                           [class.error]="pwdForm.get('currentPassword')!.invalid && pwdForm.get('currentPassword')!.touched">
+                    <button type="button" class="icon-toggle" (click)="showCurrent = !showCurrent">
+                      <mat-icon>{{ showCurrent ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                  </div>
+                  @if (pwdForm.get('currentPassword')!.touched && pwdForm.get('currentPassword')!.hasError('required')) {
+                    <span class="form-error">Current password is required</span>
+                  }
+                </div>
+                <div class="form-group">
+                  <label class="form-label required">New Password</label>
+                  <div class="input-icon-wrap">
+                    <input class="form-control" [type]="showNew ? 'text' : 'password'"
+                           formControlName="newPassword" placeholder="Min 8 characters"
+                           [class.error]="pwdForm.get('newPassword')!.invalid && pwdForm.get('newPassword')!.touched">
+                    <button type="button" class="icon-toggle" (click)="showNew = !showNew">
+                      <mat-icon>{{ showNew ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                  </div>
+                  @if (pwdForm.get('newPassword')!.touched && pwdForm.get('newPassword')!.hasError('minlength')) {
+                    <span class="form-error">Minimum 8 characters required</span>
+                  }
+                </div>
+                <div class="form-group">
+                  <label class="form-label required">Confirm New Password</label>
+                  <div class="input-icon-wrap">
+                    <input class="form-control" [type]="showConfirm ? 'text' : 'password'"
+                           formControlName="confirmPassword" placeholder="Repeat new password"
+                           [class.error]="(pwdForm.get('confirmPassword')!.touched && pwdForm.get('confirmPassword')!.hasError('required')) || (pwdForm.touched && pwdForm.hasError('mismatch'))">
+                    <button type="button" class="icon-toggle" (click)="showConfirm = !showConfirm">
+                      <mat-icon>{{ showConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                  </div>
+                  @if (pwdForm.touched && pwdForm.hasError('mismatch')) {
+                    <span class="form-error">Passwords do not match</span>
+                  }
+                </div>
+                <div class="form-actions-row">
+                  <button type="button" class="btn btn-secondary" (click)="changingPwd = false; pwdForm.reset()">Cancel</button>
+                  <button type="submit" class="btn btn-primary" [disabled]="savingPwd">
+                    @if (savingPwd) { <span class="spinner-sm"></span> }
+                    Update Password
+                  </button>
+                </div>
+              </form>
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,182 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Manage Tasks</h1>
+      <p class="page-subtitle">Track and manage project tasks across all assignments</p>
+    </div>
+    @if (canEdit) {
+      <button class="btn btn-primary" (click)="openAdd()">
+        <mat-icon>add_task</mat-icon>
+        Add Task
+      </button>
+    }
+  </div>
+
+  <app-table
+    [columns]="columns"
+    [data]="displayTasks"
+    [loading]="loading"
+    [actions]="actions"
+    emptyMessage="No tasks found."
+    (actionClicked)="onAction($event)">
+  </app-table>
+</div>
+
+<!-- Add / Edit / View Drawer -->
+<app-drawer
+  [open]="drawerOpen"
+  [title]="viewOnly ? 'Task Details' : (selectedTask ? 'Edit Task' : 'Add Task')"
+  [width]="'540px'"
+  (closed)="drawerOpen = false">
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="drawer-form">
+
+    <!-- Task Title -->
+    <div class="form-group">
+      <label class="form-label" [class.required]="!viewOnly">Task Title</label>
+      <input class="form-control" formControlName="taskTitle" placeholder="Enter task title" maxlength="200"
+             [class.error]="form.get('taskTitle')!.invalid && form.get('taskTitle')!.touched">
+      @if (form.get('taskTitle')!.touched && form.get('taskTitle')!.hasError('required')) {
+        <span class="form-error">Task title is required</span>
+      }
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-control" formControlName="taskDescription" rows="3"
+                placeholder="Describe the task..." maxlength="1000"></textarea>
+      @if (!viewOnly) {
+        <span class="form-hint">{{ form.get('taskDescription')!.value?.length || 0 }}/1000</span>
+      }
+    </div>
+
+    <!-- Project / Allocation -->
+    <div class="form-group">
+      <label class="form-label" [class.required]="!viewOnly">Project — Student</label>
+      <select class="form-control" formControlName="projectId"
+              [class.error]="form.get('projectId')!.invalid && form.get('projectId')!.touched">
+        <option [ngValue]="null" disabled>— Select Project —</option>
+        @for (p of projects; track p.allocationId) {
+          <option [ngValue]="p.allocationId">{{ p.projectTitle }} — {{ p.studentName }}</option>
+        }
+      </select>
+      @if (form.get('projectId')!.touched && form.get('projectId')!.hasError('required')) {
+        <span class="form-error">Project is required</span>
+      }
+    </div>
+
+    <!-- Priority & Status -->
+    <div class="form-row-2">
+      <div class="form-group">
+        <label class="form-label" [class.required]="!viewOnly">Priority</label>
+        <select class="form-control" formControlName="priorityId"
+                [class.error]="form.get('priorityId')!.invalid && form.get('priorityId')!.touched">
+          <option [ngValue]="null" disabled>— Priority —</option>
+          @for (p of priorities; track p.priorityId) {
+            <option [ngValue]="p.priorityId">{{ p.priorityName }}</option>
+          }
+        </select>
+        @if (form.get('priorityId')!.touched && form.get('priorityId')!.hasError('required')) {
+          <span class="form-error">Priority is required</span>
+        }
+      </div>
+      <div class="form-group">
+        <label class="form-label" [class.required]="!viewOnly">Status</label>
+        <select class="form-control" formControlName="taskStatus"
+                [class.error]="form.get('taskStatus')!.invalid && form.get('taskStatus')!.touched">
+          <option [ngValue]="null" disabled>— Status —</option>
+          @for (s of statuses; track s.statusId) {
+            <option [ngValue]="s.statusId">{{ s.statusName }}</option>
+          }
+        </select>
+        @if (form.get('taskStatus')!.touched && form.get('taskStatus')!.hasError('required')) {
+          <span class="form-error">Status is required</span>
+        }
+      </div>
+    </div>
+
+    <!-- Start Date & Due Date -->
+    <div class="form-row-2">
+      <div class="form-group">
+        <label class="form-label" [class.required]="!viewOnly">Start Date</label>
+        <input type="date" class="form-control" formControlName="startDate"
+               [class.error]="form.get('startDate')!.invalid && form.get('startDate')!.touched">
+        @if (form.get('startDate')!.touched && form.get('startDate')!.hasError('required')) {
+          <span class="form-error">Required</span>
+        }
+      </div>
+      <div class="form-group">
+        <label class="form-label" [class.required]="!viewOnly">Due Date</label>
+        <input type="date" class="form-control" formControlName="dueDate"
+               [class.error]="form.get('dueDate')!.invalid && form.get('dueDate')!.touched">
+        @if (form.get('dueDate')!.touched && form.get('dueDate')!.hasError('required')) {
+          <span class="form-error">Required</span>
+        }
+        @if (form.get('dueDate')!.touched && form.get('dueDate')!.hasError('afterStart')) {
+          <span class="form-error">Due date must be after start date</span>
+        }
+      </div>
+    </div>
+
+    <!-- Scores (faculty & admin can see both; student sees read-only) -->
+    <div class="form-row-2">
+      <div class="form-group">
+        <label class="form-label">Assigned Score</label>
+        <input type="number" class="form-control" formControlName="assignedScore"
+               min="0" max="100" placeholder="0–100">
+      </div>
+      @if (isFaculty || isAdmin || selectedTask?.earnedScore !== undefined) {
+        <div class="form-group">
+          <label class="form-label">Earned Score</label>
+          <input type="number" class="form-control" formControlName="earnedScore"
+                 min="0" max="100" placeholder="0–100"
+                 [class.error]="form.get('earnedScore')!.invalid && form.get('earnedScore')!.touched">
+          @if (form.get('earnedScore')!.touched && form.get('earnedScore')!.hasError('max')) {
+            <span class="form-error">Cannot exceed assigned score</span>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Faculty Remarks (faculty/admin only) -->
+    @if (isFaculty || isAdmin) {
+      <div class="form-group">
+        <label class="form-label">Faculty Remarks</label>
+        <textarea class="form-control" formControlName="facultyRemarks" rows="2"
+                  placeholder="Feedback for the student..." maxlength="500"></textarea>
+        <span class="form-hint">{{ form.get('facultyRemarks')!.value?.length || 0 }}/500</span>
+      </div>
+    }
+
+    <!-- Student Remarks (visible to all, editable only by student) -->
+    <div class="form-group">
+      <label class="form-label">Student Remarks</label>
+      <textarea class="form-control" formControlName="studentRemarks" rows="2"
+                placeholder="Notes from the student..." maxlength="500"></textarea>
+      @if (!isStudent) {
+        <span class="form-hint">{{ form.get('studentRemarks')!.value?.length || 0 }}/500</span>
+      }
+    </div>
+
+    @if (!viewOnly) {
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-secondary" (click)="drawerOpen = false">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving">
+          @if (saving) { <span class="spinner-sm"></span> }
+          {{ selectedTask ? 'Update Task' : 'Create Task' }}
+        </button>
+      </div>
+    } @else {
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-secondary" (click)="drawerOpen = false">Close</button>
+        @if (canEdit) {
+          <button type="button" class="btn btn-primary" (click)="openEdit(selectedTask!, false)">
+            <mat-icon>edit</mat-icon> Edit
+          </button>
+        }
+      </div>
+    }
+
+  </form>
+</app-drawer>

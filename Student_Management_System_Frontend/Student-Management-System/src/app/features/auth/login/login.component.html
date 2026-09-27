@@ -1,0 +1,99 @@
+<div class="login-page">
+  <div class="login-bg">
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+  </div>
+
+  <div class="login-card">
+    <!-- Header -->
+    <div class="login-header">
+      <div class="login-logo">
+        <mat-icon>school</mat-icon>
+      </div>
+      <h1 class="login-title">SPMS</h1>
+      <p class="login-subtitle">Student Project Management System</p>
+    </div>
+
+    <!-- Demo Creds -->
+    <div class="demo-section">
+      <p class="demo-label">Quick sign-in:</p>
+      <div class="demo-buttons">
+        @for (cred of demoCredentials; track cred.label) {
+          <button class="demo-btn" (click)="fillDemo(cred)" [style.--demo-color]="cred.color">
+            <mat-icon>{{ cred.icon }}</mat-icon>
+            {{ cred.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Error -->
+    @if (error) {
+      <div class="alert-error">
+        <mat-icon>error_outline</mat-icon>
+        {{ error }}
+      </div>
+    }
+
+    <!-- Form -->
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="form-group">
+        <label class="form-label required">Email Address</label>
+        <div class="input-with-icon">
+          <mat-icon class="input-icon-left">mail_outline</mat-icon>
+          <input type="email" class="form-control has-icon-left"
+                 formControlName="email"
+                 placeholder="you@spms.com"
+                 autocomplete="email"
+                 [class.error]="emailCtrl.invalid && emailCtrl.touched">
+        </div>
+        @if (emailCtrl.touched && emailCtrl.hasError('required')) {
+          <span class="form-error">Email is required</span>
+        }
+        @if (emailCtrl.touched && emailCtrl.hasError('email')) {
+          <span class="form-error">Enter a valid email address</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">Password</label>
+        <div class="input-with-icon">
+          <mat-icon class="input-icon-left">lock_outline</mat-icon>
+          <input [type]="showPassword ? 'text' : 'password'"
+                 class="form-control has-icon-left has-icon-right"
+                 formControlName="password"
+                 placeholder="Enter your password"
+                 autocomplete="current-password"
+                 [class.error]="passwordCtrl.invalid && passwordCtrl.touched">
+          <button type="button" class="input-icon-right icon-btn" (click)="showPassword = !showPassword">
+            <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+        @if (passwordCtrl.touched && passwordCtrl.hasError('required')) {
+          <span class="form-error">Password is required</span>
+        }
+      </div>
+
+      <div class="form-row-between">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="rememberMe" class="checkbox">
+          Remember me
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary sign-in-btn" [disabled]="loading">
+        @if (loading) {
+          <span class="spinner"></span>
+          Signing in...
+        } @else {
+          <mat-icon>login</mat-icon>
+          Sign In
+        }
+      </button>
+    </form>
+
+    <p class="login-footer-text">
+      SPMS &copy; {{ year }} 
+    </p>
+  </div>
+</div>

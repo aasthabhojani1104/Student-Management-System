@@ -1,0 +1,70 @@
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <mat-icon>school</mat-icon>
+    </div>
+    @if (!collapsed) {
+      <span class="logo-text">SPMS</span>
+    }
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar-nav">
+    @for (group of navGroups; track group.label) {
+      @if (group.label && !collapsed) {
+        <div class="nav-group-label">{{ group.label }}</div>
+      }
+      @for (item of group.items; track item.label) {
+        @if (isVisible(item)) {
+          @if (item.label === 'Dashboard') {
+            <a class="nav-item"
+               [routerLink]="getDashboardRoute()"
+               routerLinkActive="active"
+               [matTooltip]="collapsed ? item.label : ''"
+               matTooltipPosition="right">
+              <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+              @if (!collapsed) {
+                <span class="nav-label">{{ item.label }}</span>
+              }
+            </a>
+          } @else {
+            <a class="nav-item"
+               [routerLink]="item.route"
+               routerLinkActive="active"
+               [matTooltip]="collapsed ? item.label : ''"
+               matTooltipPosition="right">
+              <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+              @if (!collapsed) {
+                <span class="nav-label">{{ item.label }}</span>
+              }
+            </a>
+          }
+        }
+      }
+      @if (group.label && !collapsed) {
+        <div class="nav-group-divider"></div>
+      }
+    }
+  </nav>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <a class="nav-item"
+       routerLink="/profile"
+       routerLinkActive="active"
+       [matTooltip]="collapsed ? 'Profile' : ''"
+       matTooltipPosition="right">
+      <mat-icon class="nav-icon">account_circle</mat-icon>
+      @if (!collapsed) {
+        <span class="nav-label">Profile</span>
+      }
+    </a>
+    <button class="nav-item collapse-btn" (click)="toggle()" [matTooltip]="collapsed ? 'Expand' : 'Collapse'" matTooltipPosition="right">
+      <mat-icon class="nav-icon">{{ collapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      @if (!collapsed) {
+        <span class="nav-label">Collapse</span>
+      }
+    </button>
+  </div>
+</aside>

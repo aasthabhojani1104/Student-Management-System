@@ -1,0 +1,27 @@
+<div class="shell-layout">
+  <!-- Sidebar -->
+  <app-sidebar
+    [collapsed]="sidebarCollapsed"
+    (collapsedChange)="onSidebarCollapsedChange($event)">
+  </app-sidebar>
+
+  <!-- Main wrapper -->
+  <div class="shell-main" [style.margin-left]="mainMargin">
+    <!-- Topnav -->
+    <app-topnav
+      [sidebarCollapsed]="sidebarCollapsed"
+      (toggleSidebar)="sidebarCollapsed = !sidebarCollapsed; onSidebarCollapsedChange(sidebarCollapsed)">
+    </app-topnav>
+
+    <!-- Content -->
+    <main class="shell-content">
+      <div class="content-inner">
+        <app-breadcrumb></app-breadcrumb>
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <app-toast></app-toast>
+</div>

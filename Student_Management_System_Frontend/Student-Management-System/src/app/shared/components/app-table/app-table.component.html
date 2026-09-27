@@ -1,0 +1,156 @@
+<div class="table-wrapper">
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    @if (title) {
+      <span class="table-title">{{ title }}</span>
+    }
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:auto">
+      @if (showSearch) {
+        <div class="search-box">
+          <mat-icon>search</mat-icon>
+          <input type="text" placeholder="Search..." [(ngModel)]="searchTerm" (ngModelChange)="onSearch()" />
+          @if (searchTerm) {
+            <mat-icon style="cursor:pointer;font-size:16px;width:16px;height:16px" (click)="searchTerm='';onSearch()">close</mat-icon>
+          }
+        </div>
+      }
+      <ng-content select="[slot=toolbar]"></ng-content>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-scroll">
+    @if (loading) {
+      <app-skeleton type="table" [rows]="5" [cols]="columns.length"></app-skeleton>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            @for (col of columns; track col.key) {
+              <th [class.sortable]="col.sortable" [style.width]="col.width || 'auto'" (click)="col.sortable && sort(col.key)">
+                <span class="th-inner">
+                  {{ col.label }}
+                  @if (col.sortable) {
+                    <mat-icon class="sort-icon" [class.active]="sortKey === col.key">
+                      {{ sortKey === col.key ? (sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}
+                    </mat-icon>
+                  }
+                </span>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @if (paged.length === 0) {
+            <tr class="empty-row">
+              <td [attr.colspan]="columns.length">
+                <div class="empty-state-inner">
+                  <mat-icon>inbox</mat-icon>
+                  <span>{{ emptyMessage }}</span>
+                </div>
+              </td>
+            </tr>
+          }
+          @for (row of paged; track $index) {
+            <tr>
+              @for (col of columns; track col.key) {
+                <td>
+                  @switch (col.type) {
+                    @case ('badge') {
+                      <app-badge [label]="row[col.key] || '—'" [cssClass]="col.cssClassKey ? row[col.cssClassKey] : 'badge-secondary'"></app-badge>
+                    }
+                    @case ('progress') {
+                      <div class="progress-cell">
+                        <div class="progress-bar-wrap">
+                          <div class="progress-bar-fill"
+                               [style.width.%]="row[col.key] || 0"
+                               [class.success]="row[col.key] >= 100"
+                               [class.warning]="row[col.key] >= 50 && row[col.key] < 100"
+                               [class.danger]="row[col.key] < 50 && row[col.key] > 0"
+                               [style.min-width]="(row[col.key] || 0) > 0 ? '4px' : '0'">
+                          </div>
+                        </div>
+                        <div class="progress-text">{{ row[col.key] || 0 }}%</div>
+                      </div>
+                    }
+                    @case ('date') {
+                      {{ formatDate(row[col.key]) }}
+                    }
+                    @case ('boolean') {
+                      <app-badge [label]="row[col.key] ? 'Active' : 'Inactive'" [cssClass]="row[col.key] ? 'badge-success' : 'badge-secondary'"></app-badge>
+                    }
+                    @case ('avatar') {
+                      <div class="avatar-cell">
+                        @if (col.imageKey && row[col.imageKey]) {
+                          <img class="avatar-circle"
+                               [src]="row[col.imageKey]"
+                               [alt]="row[col.key]"
+                               style="object-fit:cover;">
+                        } @else {
+                          <div class="avatar-circle" [style.background-color]="getAvatarColor(row[col.key])">
+                            {{ getAvatarText(row[col.key]) }}
+                          </div>
+                        }
+                        <span class="avatar-name">{{ row[col.key] || '—' }}</span>
+                      </div>
+                    }
+                    @case ('actions') {
+                      <div class="actions-cell">
+                        @for (act of actions; track act.action) {
+                          @if (isActionVisible(act, row)) {
+                            <button class="action-btn" [class]="act.color || ''"
+                                    [matTooltip]="act.label"
+                                    (click)="onAction(act.action, row)">
+                              <mat-icon>{{ act.icon }}</mat-icon>
+                            </button>
+                          }
+                        }
+                      </div>
+                    }
+                    @default {
+                      {{ row[col.key] ?? '—' }}
+                    }
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <!-- Footer / Pagination -->
+  @if (!loading && filtered.length > 0) {
+    <div class="table-footer">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="pagination-info">Rows per page:</span>
+        <select class="page-size-select" [(ngModel)]="pageSize" (ngModelChange)="goTo(1)">
+          @for (opt of pageSizeOptions; track opt) {
+            <option [value]="opt">{{ opt }}</option>
+          }
+        </select>
+      </div>
+      <span class="pagination-info">{{ startIndex }}–{{ endIndex }} of {{ filtered.length }}</span>
+      <div class="pagination-controls">
+        <button class="page-btn" (click)="goTo(1)" [disabled]="currentPage === 1">
+          <mat-icon style="font-size:16px;width:16px;height:16px">first_page</mat-icon>
+        </button>
+        <button class="page-btn" (click)="goTo(currentPage - 1)" [disabled]="currentPage === 1">
+          <mat-icon style="font-size:16px;width:16px;height:16px">chevron_left</mat-icon>
+        </button>
+        @for (page of pages; track page) {
+          @if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+            <button class="page-btn" [class.active]="page === currentPage" (click)="goTo(page)">{{ page }}</button>
+          }
+        }
+        <button class="page-btn" (click)="goTo(currentPage + 1)" [disabled]="currentPage === totalPages">
+          <mat-icon style="font-size:16px;width:16px;height:16px">chevron_right</mat-icon>
+        </button>
+        <button class="page-btn" (click)="goTo(totalPages)" [disabled]="currentPage === totalPages">
+          <mat-icon style="font-size:16px;width:16px;height:16px">last_page</mat-icon>
+        </button>
+      </div>
+    </div>
+  }
+</div>

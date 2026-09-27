@@ -1,0 +1,31 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="form-group">
+    <label class="form-label required">Role Name</label>
+    <input type="text" class="form-control"
+           formControlName="roleName"
+           placeholder="e.g., Admin"
+           maxlength="50"
+           [class.error]="form.get('roleName')?.invalid && form.get('roleName')?.touched">
+    @if (form.get('roleName')?.touched && form.get('roleName')?.hasError('required')) {
+      <span class="form-error">Role name is required</span>
+    }
+    @if (form.get('roleName')?.touched && form.get('roleName')?.hasError('maxlength')) {
+      <span class="form-error">Max 50 characters</span>
+    }
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Description</label>
+    <textarea class="form-control" formControlName="description"
+              rows="3" placeholder="Brief description of this role" maxlength="255"></textarea>
+    <span class="form-hint">{{ form.get('description')?.value?.length || 0 }}/255</span>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancelled.emit()">Cancel</button>
+    <button type="submit" class="btn btn-primary" [disabled]="saving">
+      @if (saving) { <span class="spinner-sm"></span> }
+      {{ role ? 'Update Role' : 'Create Role' }}
+    </button>
+  </div>
+</form>

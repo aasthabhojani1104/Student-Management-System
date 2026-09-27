@@ -1,0 +1,18 @@
+<div class="kpi-card">
+  <div class="kpi-icon" [style.background-color]="iconBg + '20'" [style.color]="iconBg">
+    <mat-icon>{{ icon }}</mat-icon>
+  </div>
+  <div class="kpi-content">
+    <span class="kpi-value">{{ value }}</span>
+    <span class="kpi-title">{{ title }}</span>
+    @if (subtitle) {
+      <span class="kpi-subtitle">{{ subtitle }}</span>
+    }
+    @if (trend !== undefined) {
+      <span class="kpi-trend" [class.positive]="trend >= 0" [class.negative]="trend < 0">
+        <mat-icon>{{ trend >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+        {{ trend >= 0 ? '+' : '' }}{{ trend }}% {{ trendLabel }}
+      </span>
+    }
+  </div>
+</div>

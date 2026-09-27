@@ -1,0 +1,33 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Manage Roles</h1>
+      <p class="page-subtitle">Define and manage user roles in the system</p>
+    </div>
+    <button class="btn btn-primary" (click)="openAdd()">
+      <mat-icon>add</mat-icon>
+      Add Role
+    </button>
+  </div>
+
+  <app-table
+    [columns]="columns"
+    [data]="roles"
+    [loading]="loading"
+    [actions]="actions"
+    title=""
+    emptyMessage="No roles found. Add your first role."
+    (actionClicked)="onAction($event)">
+  </app-table>
+</div>
+
+<app-drawer
+  [open]="drawerOpen"
+  [title]="selectedRole ? 'Edit Role' : 'Add Role'"
+  (closed)="drawerOpen = false">
+  <app-role-form
+    [role]="selectedRole"
+    (saved)="onSaved()"
+    (cancelled)="drawerOpen = false">
+  </app-role-form>
+</app-drawer>
